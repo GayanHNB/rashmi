@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Procurement Platform</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f8f9fa;
+    }
+    h2 {
+      color: #343a40;
+      text-align: center;
+      font-size: 1.5em;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin: 20px auto;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 0.9em;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+    .hidden {
+      display: none;
+      color: red;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    .btn-remove {
+      background: red;
+      color: white;
+    }
+    .quantity-container {
+      display: flex;
+      justify-content: space-between;
+    }
+    .quantity-container input,
+    .quantity-container select {
+      width: 48%;
+    }
+    /* Mobile adjustments */
+    @media (max-width: 600px) {
+      body {
+        margin: 10px;
+      }
+      form, .container {
+        padding: 10px;
+      }
+      h2 {
+        font-size: 1.3em;
+      }
+      input, select, button {
+        padding: 8px;
+        font-size: 0.9em;
+      }
+      table, th, td {
+        font-size: 0.8em;
+        padding: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Procurement Request Form</h2>
+    <form id="requestForm">
+      <label for="item">Item Name:</label>
+      <input type="text" id="item" required oninput="showPreviousPrice()" />
+      <span id="prevPrice" class="hidden"></span><br />
+
+      <label for="quantity">Quantity:</label>
+      <div class="quantity-container">
+        <input type="number" id="quantityValue" placeholder="Enter quantity" required />
+        <select id="quantityUnit" required>
+          <option value="Kg">Kg</option>
+          <option value="pieces">Pieces</option>
+          <option value="boxes">Boxes</option>
+          <option value="cases">Cases</option>
+          <option value="units">Units</option>
+        </select>
+      </div><br />
+
+      <label for="margin">Margin (%):</label>
+      <input type="number" id="marginValue" placeholder="Enter margin" required /><br />
+
+      <button type="button" onclick="addItem()">Add to List</button>
+    </form>
+
+    <h2>Requested Items</h2>
+    <table id="itemsTable">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Quantity</th>
+          <th>Supplier Price</th>
+          <th>Margin (%)</th>
+          <th>Unit Price (MVR)</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button type="button" onclick="generateQuotation()">Generate Quotation</button>
+    <button type="button" onclick="generateInvoice()">Generate Invoice</button>
+
+    <h2>Quotation Preview</h2>
+    <pre id="quotationOutput"></pre>
+    <h2>Invoice Preview</h2>
+    <pre id="invoiceOutput"></pre>
+  </div>
+
+  <script>
+    // Predefined seller's prices
+    let previousPrices = { "Laptop": 800, "Phone": 500, "Printer": 300 };
+    let items = [];
+
+    // Show seller's price if available
+    function showPreviousPrice() {
+      const itemName = document.getElementById("item").value;
+      const priceSpan = document.getElementById("prevPrice");
+      if (previousPrices[itemName]) {
+        priceSpan.textContent = "Seller's Price: $" + previousPrices[itemName];
+        priceSpan.classList.remove("hidden");
+      } else {
+        priceSpan.classList.add("hidden");
+      }
+    }
+
+    // Add item to the list
+    function addItem() {
+      const item = document.getElementById("item").value;
+      const quantityValue = parseFloat(document.getElementById("quantityValue").value);
+      const quantityUnit = document.getElementById("quantityUnit").value;
+      // Use preset seller price if available, else prompt
+      const supplierPrice = previousPrices[item] || parseFloat(prompt("Enter supplier price for " + item));
+      const margin = parseFloat(document.getElementById("marginValue").value);
+      // Calculate unit price after margin and total price = quantity * unit price
+      const unitPrice = supplierPrice * (1 + margin / 100);
+      const totalPrice = quantityValue * unitPrice;
+      items.push({ 
+        item, 
+        quantity: quantityValue, 
+        unit: quantityUnit, 
+        supplierPrice, 
+        margin, 
+        unitPrice, 
+        totalPrice 
+      });
+      updateTable();
+    }
+
+    // Update the items table
+    function updateTable() {
+      const tbody = document.querySelector("#itemsTable tbody");
+      tbody.innerHTML = "";
+      items.forEach((item, index) => {
+        const row = `<tr>
+          <td>${item.item}</td>
+          <td>${item.quantity} ${item.unit}</td>
+          <td>$${item.supplierPrice}</td>
+          <td>${item.margin}%</td>
+          <td>$${item.unitPrice.toFixed(2)}</td>
+          <td><button class="btn-remove" onclick="removeItem(${index})">Remove</button></td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    // Remove an item from the list
+    function removeItem(index) {
+      items.splice(index, 1);
+      updateTable();
+    }
+
+    // Function to generate a Word document using HTML content
+    function generateWordDoc(content, filename) {
+      const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+                     "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+                     "xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + filename + "</title></head><body>";
+      const footer = "</body></html>";
+      const sourceHTML = header + content + footer;
+      const source = 'data:application/msword;charset=utf-8,' + encodeURIComponent(sourceHTML);
+      const fileDownload = document.createElement("a");
+      document.body.appendChild(fileDownload);
+      fileDownload.href = source;
+      fileDownload.download = filename;
+      fileDownload.click();
+      document.body.removeChild(fileDownload);
+    }
+
+    // Generate Quotation Document
+    function generateQuotation() {
+      let total = items.reduce((sum, item) => sum + item.totalPrice, 0);
+      let tableRows = "";
+      items.forEach((item, index) => {
+        tableRows += `<tr>
+                        <td style="padding:5px;">${index + 1}</td>
+                        <td style="padding:5px;">${item.item}</td>
+                        <td style="padding:5px;">${item.unit}</td>
+                        <td style="padding:5px;">${item.quantity}</td>
+                        <td style="padding:5px;">${item.unitPrice.toFixed(2)}</td>
+                        <td style="padding:5px;">${item.totalPrice.toFixed(2)}</td>
+                      </tr>`;
+      });
+      const content = `
+        <h2>CSC Exports</h2>
+        <p>Fareedhee Magu, Male, Maldives</p>
+        <p>Tel: +960 9737555</p>
+        <p>Email: sales@cscemv.com</p>
+        <p>Quotation Date: 25-02-2025</p>
+        <p>Quotation No: CSC-QUO-20250225</p>
+        <h3>Bill To:</h3>
+        <p>Ms. Rashmi<br>
+           Green Cube Pvt Ltd (C003312019)<br>
+           M Hithimaa Villa, Naseemee Hingun, Male, Maldives</p>
+        <h3>Description of Goods/Services:</h3>
+        <table border="1" style="width:100%; border-collapse:collapse;">
+          <tr>
+            <th style="padding:5px;">No.</th>
+            <th style="padding:5px;">Item Description</th>
+            <th style="padding:5px;">Unit</th>
+            <th style="padding:5px;">Quantity</th>
+            <th style="padding:5px;">Unit Price (MVR)</th>
+            <th style="padding:5px;">Total (MVR)</th>
+          </tr>
+          ${tableRows}
+        </table>
+        <p><strong>Total: MVR ${total.toFixed(2)}</strong></p>
+        <p><strong>Terms and Conditions:</strong><br>
+           • Price Validity: 24 hours from the date of issue.<br>
+           • Payment Terms: Full payment upon delivery.<br>
+           • Return Policy: No returns unless damaged goods are received.<br>
+           • Liability: CSC Exports is not liable for any delays in delivery due to unforeseen circumstances.<br>
+           • Warranty: Fresh goods only, no warranty beyond standard shelf life.
+        </p>
+        <p>Authorized by:<br>
+           P H S C Jayarathne<br>
+           Chairman, CSC Exports
+        </p>
+      `;
+      document.getElementById("quotationOutput").textContent =
+        "Quotation Generated:\n" +
+        tableRows.replace(/<[^>]*>/g, " ") +
+        "\nTotal: MVR " + total.toFixed(2);
+      generateWordDoc(content, "quotation.doc");
+    }
+
+    // Generate Invoice Document
+    function generateInvoice() {
+      let total = items.reduce((sum, item) => sum + item.totalPrice, 0);
+      let tableRows = "";
+      items.forEach((item, index) => {
+        tableRows += `<tr>
+                        <td style="padding:5px;">${index + 1}</td>
+                        <td style="padding:5px;">${item.item}</td>
+                        <td style="padding:5px;">${item.unit}</td>
+                        <td style="padding:5px;">${item.quantity}</td>
+                        <td style="padding:5px;">${item.unitPrice.toFixed(2)}</td>
+                        <td style="padding:5px;">${item.totalPrice.toFixed(2)}</td>
+                      </tr>`;
+      });
+      const content = `
+        <h2>CSC Exports</h2>
+        <p>Fareedhee Magu, Male, Maldives</p>
+        <p>Tel: +960 9737555</p>
+        <p>Email: sales@cscemv.com</p>
+        <p>Invoice Date: 25-02-2025</p>
+        <p>Invoice No: CSC-INV-20250225</p>
+        <h3>Bill To:</h3>
+        <p>Ms. Rashmi<br>
+           Green Cube Pvt Ltd (C003312019)<br>
+           M Hithimaa Villa, Naseemee Hingun, Male, Maldives</p>
+        <h3>Description of Goods/Services:</h3>
+        <table border="1" style="width:100%; border-collapse:collapse;">
+          <tr>
+            <th style="padding:5px;">No.</th>
+            <th style="padding:5px;">Item Description</th>
+            <th style="padding:5px;">Unit</th>
+            <th style="padding:5px;">Quantity</th>
+            <th style="padding:5px;">Unit Price (MVR)</th>
+            <th style="padding:5px;">Total (MVR)</th>
+          </tr>
+          ${tableRows}
+        </table>
+        <p><strong>Total: MVR ${total.toFixed(2)}</strong></p>
+        <p><strong>Terms and Conditions:</strong><br>
+           • Price Validity: 24 hours from the date of issue.<br>
+           • Payment Terms: Full payment upon delivery.<br>
+           • Return Policy: No returns unless damaged goods are received.<br>
+           • Liability: CSC Exports is not liable for any delays in delivery due to unforeseen circumstances.<br>
+           • Warranty: Fresh goods only, no warranty beyond standard shelf life.
+        </p>
+        <p>Authorized by:<br>
+           P H S C Jayarathne<br>
+           Chairman, CSC Exports
+        </p>
+      `;
+      document.getElementById("invoiceOutput").textContent =
+        "Invoice Generated:\n" +
+        tableRows.replace(/<[^>]*>/g, " ") +
+        "\nTotal: MVR " + total.toFixed(2);
+      generateWordDoc(content, "invoice.doc");
+    }
+  </script>
+</body>
+</html>

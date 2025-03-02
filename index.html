@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Platform</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            width: 120px;
+            font-size: 16px;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .form-group button {
+            padding: 10px 20px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .form-group button:hover {
+            background-color: #555;
+        }
+        .requested-items {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .requested-items h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .requested-items ul {
+            list-style: none;
+            padding: 0;
+        }
+        .requested-items li {
+            background-color: #f4f4f4;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .actions button {
+            flex-grow: 1;
+            padding: 10px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .actions button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Procurement Platform</h1>
+
+    <!-- Procurement Request Form -->
+    <div class="form-group">
+        <label for="item-name">Item Name:</label>
+        <input type="text" id="item-name" placeholder="Enter item name">
+    </div>
+    <div class="form-group">
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" placeholder="Enter quantity">
+        <select id="unit">
+            <option value="kg">Kg</option>
+            <option value="pieces">Pieces</option>
+            <option value="boxes">Boxes</option>
+            <option value="cases">Cases</option>
+            <option value="units">Units</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="margin">Margin (%):</label>
+        <input type="number" id="margin" placeholder="Enter margin percentage">
+        <button onclick="addToRequestedItems()">Add to List</button>
+    </div>
+
+    <!-- Requested Items -->
+    <div class="requested-items">
+        <h2>Requested Items</h2>
+        <ul id="requested-items-list"></ul>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+        <button onclick="generateQuotation()">Generate Quotation</button>
+        <button onclick="generateInvoice()">Generate Invoice</button>
+        <button onclick="previewQuotation()">Quotation Preview</button>
+        <button onclick="previewInvoice()">Invoice Preview</button>
+    </div>
+</div>
+
+<script>
+    // JavaScript to handle dynamic functionality
+    const requestedItemsList = document.getElementById('requested-items-list');
+
+    function addToRequestedItems() {
+        const itemName = document.getElementById('item-name').value.trim();
+        const quantity = document.getElementById('quantity').value.trim();
+        const unit = document.getElementById('unit').value;
+        const margin = document.getElementById('margin').value.trim();
+
+        if (!itemName || !quantity || !margin) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+            <span>${itemName} - ${quantity} ${unit} (Margin: ${margin}%)</span>
+            <button onclick="removeItem(this)">Remove</button>
+        `;
+        requestedItemsList.appendChild(listItem);
+
+        // Clear input fields
+        document.getElementById('item-name').value = '';
+        document.getElementById('quantity').value = '';
+        document.getElementById('margin').value = '';
+    }
+
+    function removeItem(button) {
+        const listItem = button.parentElement;
+        requestedItemsList.removeChild(listItem);
+    }
+
+    function generateQuotation() {
+        alert("Generating Quotation...");
+        // Add logic to generate quotation
+    }
+
+    function generateInvoice() {
+        alert("Generating Invoice...");
+        // Add logic to generate invoice
+    }
+
+    function previewQuotation() {
+        alert("Previewing Quotation...");
+        // Add logic to preview quotation
+    }
+
+    function previewInvoice() {
+        alert("Previewing Invoice...");
+        // Add logic to preview invoice
+    }
+</script>
+
+</body>
+</html>
